@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Pedantox</title>
+    </head>
+    <style>
+        :root {
+            --background: #eff1f5;
+            --text: #4c4f69;
+            --darker: #5c5f77;
+            --green: #a6da95;
+            --peach: #fe640b;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+        }
+        
+        article {
+            user-select: none;
+        }
+
+        span[data-len] {
+            white-space: pre;
+            background: var(--darker);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.5s ease-in-out;
+            letter-spacing: 0.2em;
+            padding: 0.1em;
+        }
+
+        span[data-len].found {
+            cursor: auto;
+            letter-spacing: initial;
+            background: transparent;
+            color: var(--text);
+        }
+
+        span[data-len].just-found {
+            background: var(--green);
+            color: black;
+        }
+        
+        span[data-len] {
+            position: relative;
+        }
+        
+        span[data-len]::before {
+            content: attr(data-len);
+            position: absolute;
+            inset: 0;
+            text-align: center;
+            color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            letter-spacing: initial;
+            transition: color .2s .5s;
+        }
+        
+        span[data-len]:not(.found):hover::before {
+            color: white;
+            transition: color .1s;
+        }
+
+        p {
+            line-height: 1.5;
+        }
+
+        .found-matches {
+            background: var(--green);
+            color: transparent;
+        }
+
+        .similar-matches {
+            background: var(--peach);
+            color: transparent;
+        }
+
+        @keyframes correct {
+            0% {
+                background: var(--darker);
+                color: transparent;
+            }
+
+            50% {
+                background: var(--green);
+                color: transparent;
+            }
+
+            100% {
+                background: transparent;
+                color: var(--text);
+            }
+        }
+        
+        h1 > b {
+            color: var(--peach);
+        }
+        
+        h1 {
+            margin: 0;
+        }
+        
+        .matches {
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: fit-content;
+            max-height: fit-content;
+            height: fit-content;
+            cursor: default;
+        }
+        
+        #word_search {
+            display: flex;
+            gap: .5rem;
+            align-items: center;
+        }
+    </style>
+    <body>
+        <h1>Pédant<b>🞴</b>x</h1>
+        <hr>
+        <form id="word_search">
+            <input type="search" placeholder="Mot" autofocus />
+            <input type="submit" value="Envoyer" />
+            <section class="matches">
+                <span class="found-matches" title="Mots trouvés">_____</span
+                ><span class="similar-matches" title="Mots similaires"
+                    >___</span
+                >
+            </section>
+        </form>
+        <article>{{ .PedHTML }}</article>
+    </body>
+
+    <script>
+        let lastSentWord = "";
+        let lastRequestDate = Date.now();
+        let searchForm = document.querySelector("#word_search");
+        let foundMatches = document.querySelector(".found-matches");
+        let similarMatches = document.querySelector(".similar-matches");
+        let searchInput = searchForm.querySelector("input");
+        
+        let lastFoundTokens = [];
+
+        document.addEventListener("keydown", (e) => {
+            searchInput.focus();
+        });
+
+        searchForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const elapsedTime = Date.now() - lastRequestDate;
+            const word = searchInput.value;
+
+            foundMatches.textContent = null;
+            similarMatches.textContent = null;
+
+            if (word.length <= 0 || elapsedTime < 500) return;
+
+            searchInput.value = null;
+            searchInput.placeholder = word;
+            
+            lastFoundTokens.forEach(token => {
+              token.classList.remove("just-found");
+            });
+            lastFoundTokens = [];
+
+            if (word == lastSentWord) return;
+
+            const payload = {
+                session_id: "",
+                word: word,
+            };
+
+            const res = await fetch("word", {
+                method: "POST",
+                body: JSON.stringify(payload),
+            });
+
+            const jsonResponse = await res.json();
+
+            jsonResponse.forEach((sim) => {
+                const matchedToken = document.querySelector(`#t${sim.TokenId}`);
+                if (sim.Similarity >= 100) {
+                    matchedToken.classList.add("found");
+                    matchedToken.classList.add("just-found");
+                    matchedToken.textContent = sim.SimilarWord;
+                    foundMatches.textContent += "_";
+                } else if (sim.Similarity >= 80) {
+                    // Show word on token (+ compare with previous sim)
+                    similarMatches.textContent += "_";
+                }
+                
+                lastFoundTokens.push(matchedToken);
+            });
+
+            lastSentWord = word;
+            lastRequestDate = Date.now();
+        });
+    </script>
+</html>
