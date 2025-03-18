@@ -18,7 +18,7 @@
             background: var(--background);
             color: var(--text);
         }
-        
+
         article {
             user-select: none;
         }
@@ -44,11 +44,11 @@
             background: var(--green);
             color: black;
         }
-        
+
         span[data-len] {
             position: relative;
         }
-        
+
         span[data-len]::before {
             content: attr(data-len);
             position: absolute;
@@ -59,12 +59,12 @@
             justify-content: center;
             align-items: center;
             letter-spacing: initial;
-            transition: color .2s .5s;
+            transition: color 0.2s 0.5s;
         }
-        
+
         span[data-len]:not(.found):hover::before {
             color: white;
-            transition: color .1s;
+            transition: color 0.1s;
         }
 
         p {
@@ -97,15 +97,15 @@
                 color: var(--text);
             }
         }
-        
+
         h1 > b {
             color: var(--peach);
         }
-        
+
         h1 {
             margin: 0;
         }
-        
+
         .matches {
             border-radius: 4px;
             overflow: hidden;
@@ -114,16 +114,16 @@
             height: fit-content;
             cursor: default;
         }
-        
+
         #word_search {
             display: flex;
-            gap: .5rem;
+            gap: 0.5rem;
             align-items: center;
         }
     </style>
     <body>
         <h1>Pédant<b>🞴</b>x</h1>
-        <hr>
+        <hr />
         <form id="word_search">
             <input type="search" placeholder="Mot" autofocus />
             <input type="submit" value="Envoyer" />
@@ -144,7 +144,7 @@
         let foundMatches = document.querySelector(".found-matches");
         let similarMatches = document.querySelector(".similar-matches");
         let searchInput = searchForm.querySelector("input");
-        
+
         let lastFoundTokens = [];
 
         document.addEventListener("keydown", (e) => {
@@ -163,9 +163,10 @@
 
             searchInput.value = null;
             searchInput.placeholder = word;
-            
-            lastFoundTokens.forEach(token => {
-              token.classList.remove("just-found");
+
+            lastFoundTokens.forEach((token) => {
+                token.classList.remove("just-found");
+                token.classList.remove("just-similar");
             });
             lastFoundTokens = [];
 
@@ -185,16 +186,20 @@
 
             jsonResponse.forEach((sim) => {
                 const matchedToken = document.querySelector(`#t${sim.TokenId}`);
-                if (sim.Similarity >= 100) {
+                if (sim.Similarity >= 1) {
                     matchedToken.classList.add("found");
                     matchedToken.classList.add("just-found");
                     matchedToken.textContent = sim.SimilarWord;
                     foundMatches.textContent += "_";
-                } else if (sim.Similarity >= 80) {
-                    // Show word on token (+ compare with previous sim)
+                } else {
                     similarMatches.textContent += "_";
+                    matchedToken.classList.add("just-similar");
+                    matchedToken.textContent = " ".repeat(
+                        sim.SimilarWord.length + 4,
+                    );
+                    matchedToken.setAttribute("data-similar", sim.SimilarWord);
                 }
-                
+
                 lastFoundTokens.push(matchedToken);
             });
 
