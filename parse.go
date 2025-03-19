@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -151,9 +152,17 @@ func GetFinalHtmlFromPage(page PageContent) (tokens []WordToken, finalHTML strin
 }
 
 func main() {
+	binary := flag.String("b", "", "The word embedding binary (word2vec format)")
+
+	flag.Parse()
+
+	if *binary == "" {
+		panic("No binary submitted, use '-b' to specify word embeding path.")
+	}
+
 	fmt.Println("Loading the word2vec binary...")
-	//TODO: Load
-	content, err := os.Open("frWac_non_lem_no_postag_no_phrase_200_cbow_cut0.bin")
+
+	content, err := os.Open(*binary)
 	if err != nil {
 		panic(err)
 	}
