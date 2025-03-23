@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http"
+	"slices"
 	"strconv"
+	"strings"
 )
-
-// regex for words / numbers : /[\p{L}]+|[[:digit:]]+/gm
 
 type PageContent struct {
 	Title   string
@@ -29,7 +31,16 @@ type WikiRandomQuery struct {
 	}
 }
 
-func get_article_content(id int) PageContent {
+type WikiPageViewsQuery struct {
+	Query struct {
+		Pages map[string]struct {
+			Pageid    int
+			Pageviews map[string]int
+		}
+	}
+}
+
+func GetArticleContent(id int) PageContent {
 	str_id := strconv.Itoa(id)
 	content_url := "https://fr.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=&format=json&pageids=" + str_id
 
@@ -53,8 +64,59 @@ func get_article_content(id int) PageContent {
 	return q.Query.Pages[str_id]
 }
 
-func get_random_article() int {
-	random_url := "https://fr.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0"
+func GetMostViewedArticle(query *WikiRandomQuery) (page_id, max_view_count int) {
+	page_ids := make([]string, 0)
+
+	for _, page := range query.Query.Random {
+		page_ids = append(page_ids, fmt.Sprint(page.Id))
+	}
+
+	page_views_url := "https://fr.wikipedia.org/w/api.php?action=query&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
+
+	req, _ := http.NewRequest("GET", page_views_url, nil)
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer res.Body.Close()
+
+	body, _ := io.ReadAll(res.Body)
+
+	var q WikiPageViewsQuery
+
+	err = json.Unmarshal(body, &q)
+	if err != nil {
+		panic(err)
+	}
+
+	max_page_views := make(map[int]int, 0)
+
+	for _, page := range q.Query.Pages {
+		sorted_views := slices.Sorted(maps.Values(page.Pageviews))
+		max := 0
+		if len(sorted_views) > 0 {
+			max = sorted_views[len(sorted_views)-1]
+		}
+		max_page_views[page.Pageid] = max
+	}
+
+	for id, max := range max_page_views {
+		if max_view_count > max {
+			continue
+		}
+
+		page_id = id
+		max_view_count = max
+	}
+
+	fmt.Printf("most viewed: %d with %d views max on a day this month.\n", page_id, max_view_count)
+	return
+}
+
+func GetRandomArticles(count int) WikiRandomQuery {
+	random_url := "https://fr.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=" + strconv.Itoa(count)
 
 	req, _ := http.NewRequest("GET", random_url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -70,8 +132,20 @@ func get_random_article() int {
 
 	err = json.Unmarshal(body, &q)
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 
-	return q.Query.Random[0].Id
+	return q
+}
+
+func GetRandomArticle(minPageViews int) int {
+	var page_view_count int
+	var page_id int
+
+	for page_view_count <= minPageViews {
+		random_list := GetRandomArticles(50)
+		page_id, page_view_count = GetMostViewedArticle(&random_list)
+	}
+
+	return page_id
 }

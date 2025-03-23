@@ -1,0 +1,174 @@
+:root {
+    --background: #eff1f5;
+    --text: #4c4f69;
+    --darker: #24273a;
+    --green: #a6da95;
+    --light-peach: #fe640b;
+    --dark-peach: #fab387;
+}
+
+body {
+    background: var(--background);
+    color: var(--text);
+}
+
+article {
+    user-select: none;
+}
+
+span[data-len] {
+    white-space: pre;
+    background: var(--darker);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.5s ease-in-out;
+    letter-spacing: 0.2em;
+    padding: 0.1em;
+}
+
+span[data-len].found {
+    cursor: auto;
+    letter-spacing: initial;
+    background: transparent;
+    color: var(--text);
+}
+
+span[data-len].just-found {
+    background: var(--green);
+    color: black;
+}
+
+span[data-len] {
+    position: relative;
+}
+
+span[data-len]::before {
+    content: attr(data-len);
+    position: absolute;
+    inset: 0;
+    text-align: center;
+    color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    letter-spacing: initial;
+    transition: color 0.1s 0.5s;
+}
+
+span[data-len]:not(.found):hover::before {
+    color: white;
+    transition: color 0.1s;
+}
+
+span[data-similar]:not(.found)::after {
+    content: attr(data-similar);
+    position: absolute;
+    opacity: var(--opacity, 1);
+    inset: 0;
+    text-align: center;
+    color: lightgray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    letter-spacing: initial;
+    transition: color 0.1s, opacity .1s .5s;
+}
+
+span[data-similar]:hover::after {
+    opacity: 0;
+    transition: opacity .1s;
+}
+
+span[data-similar].just-similar::after {
+    opacity: 1;
+    color: var(--dark-peach);
+}
+
+p {
+    line-height: 1.5;
+}
+
+.found-matches {
+    background: var(--green);
+    color: transparent;
+}
+
+.similar-matches {
+    background: var(--light-peach);
+    color: transparent;
+}
+
+@keyframes correct {
+    0% {
+        background: var(--darker);
+        color: transparent;
+    }
+
+    50% {
+        background: var(--green);
+        color: transparent;
+    }
+
+    100% {
+        background: transparent;
+        color: var(--text);
+    }
+}
+
+h1>b {
+    color: var(--light-peach);
+}
+
+h1 {
+    margin: 0;
+}
+
+.matches {
+    border-radius: 4px;
+    overflow: hidden;
+    max-width: fit-content;
+    max-height: fit-content;
+    height: fit-content;
+    cursor: default;
+}
+
+#word_search {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+main {
+    display: flex;
+    gap: 1rem;
+}
+
+aside {
+    background: #ccd0da;
+    border-radius: 4px;
+    padding: 1rem;
+    flex: 1;
+    max-height: 300px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+main > section {
+    flex: 5;
+}
+
+aside > hr {
+    width: 100%;
+}
+
+aside > h3 {
+    margin: 0;
+}
+
+ol.word-history {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: start;
+    overflow: scroll;
+}

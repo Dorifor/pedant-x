@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="static/style.css">
+    <title>Pedantox</title>
+</head>
+
+<body>
+    <header>
+        <h1>Pédant<b>🞴</b>x</h1>
+        <hr />
+    </header>
+    <main>
+
+        <aside>
+            <h3>Historique</h3>
+            <hr>
+            <ol class="word-history">
+
+            </ol>
+        </aside>
+        <section>
+            <form id="word_search">
+                <input type="search" placeholder="Mot" autofocus />
+                <input type="submit" value="Envoyer" />
+                <section class="matches">
+                    <span class="found-matches" title="Mots trouvés"></span><span class="similar-matches"
+                        title="Mots similaires"></span>
+                </section>
+            </form>
+            <article>{{ .ArticleHTML }}</article>
+        </section>
+    </main>
+</body>
+
+<script src="static/pedantox.js"></script>
+
+</html>
