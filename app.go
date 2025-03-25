@@ -109,7 +109,7 @@ func main() {
 	fmt.Println("Binary loaded ! ✅")
 
 	FetchRandomPage()
-	fmt.Printf("Fetched the page \"%s\"\n", state.PageTitle)
+	// fmt.Printf("Fetched the page \"%s\"\n", state.PageTitle)
 	http.HandleFunc("/", MainHandler)
 	http.HandleFunc("/word", CheckUserWordHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))

@@ -37,7 +37,7 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 			e2 := word2vec.Expr{token.Word: 1}
 			similarity, _ := model.Cos(e1, e2)
 			last_sim, state_exists := state.TokensState[token.Id]
-			if state_exists && similarity < last_sim.Similarity || similarity < 0.1 {
+			if state_exists && similarity < last_sim.Similarity || similarity < 0.4 {
 				continue
 			}
 			similar_word := WordSimilarity{TokenId: token.Id, Similarity: similarity, SimilarWord: word}

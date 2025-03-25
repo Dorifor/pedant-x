@@ -171,4 +171,5 @@ ol.word-history {
     flex-direction: column-reverse;
     align-items: start;
     overflow: scroll;
+    padding-left: 3rem;
 }
