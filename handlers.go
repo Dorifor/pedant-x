@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/sajari/word2vec"
 )
@@ -24,26 +26,59 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 	var found_similarities []WordSimilarity = make([]WordSimilarity, 0)
 
 	e1 := word2vec.Expr{word: 1}
+	word_int, err := strconv.Atoi(word)
+	is_word_number := err == nil
+
+	_, err = model.Eval(e1)
+	word_is_unknown := err != nil
 
 	for _, token := range state.PageTokens {
 		if SanitizeWord(token.Word) == SanitizeWord(word) {
 			similar_word := WordSimilarity{TokenId: token.Id, Similarity: 1, SimilarWord: token.Word}
 			state.TokensState[token.Id] = similar_word
 			found_similarities = append(found_similarities, similar_word)
-		} else {
+		} else if is_word_number {
+			token_int, err := strconv.Atoi(token.Word)
+			is_token_number := err == nil
+
+			if !is_token_number {
+				continue
+			}
+			current_diff := math.Abs(float64(word_int - token_int))
+
+			last_sim, state_exists := state.TokensState[token.Id]
+			last_int, _ := strconv.Atoi(last_sim.SimilarWord)
+			last_diff := math.Abs(float64(last_int - token_int))
+
+			if state_exists && last_diff < current_diff || current_diff > float64(50)/100*float64(token_int) {
+				continue
+			}
+
+			similar_int := WordSimilarity{TokenId: token.Id, Similarity: .5, SimilarWord: word}
+			found_similarities = append(found_similarities, similar_int)
+			state.TokensState[token.Id] = similar_int
+		} else if !word_is_unknown {
 			if token.IsTitle {
 				continue
 			}
+
 			e2 := word2vec.Expr{token.Word: 1}
 			similarity, _ := model.Cos(e1, e2)
+
 			last_sim, state_exists := state.TokensState[token.Id]
-			if state_exists && similarity < last_sim.Similarity || similarity < 0.4 {
+			if state_exists && similarity < last_sim.Similarity || similarity < 0.3 {
 				continue
 			}
+
 			similar_word := WordSimilarity{TokenId: token.Id, Similarity: similarity, SimilarWord: word}
 			found_similarities = append(found_similarities, similar_word)
 			state.TokensState[token.Id] = similar_word
 		}
+	}
+
+	if len(found_similarities) <= 0 && word_is_unknown {
+		http.Error(w, "Word unknown.", 404)
+		return
 	}
 
 	jsonBytes, _ := json.Marshal(found_similarities)

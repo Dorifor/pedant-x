@@ -5,6 +5,7 @@ let foundMatches = document.querySelector(".found-matches");
 let similarMatches = document.querySelector(".similar-matches");
 let wordHistoryList = document.querySelector(".word-history");
 let searchInput = searchForm.querySelector("input");
+let wordNotFoundLabel = document.querySelector('#not-found');
 
 const wordHistory = [];
 let lastFoundTokens = [];
@@ -22,6 +23,7 @@ searchForm.addEventListener("submit", async (e) => {
     similarMatches.textContent = null;
 
     if (word.length <= 0 || elapsedTime < 250) return;
+    wordNotFoundLabel.classList.remove('shown');
 
     searchInput.value = null;
     searchInput.placeholder = word;
@@ -43,6 +45,10 @@ searchForm.addEventListener("submit", async (e) => {
         method: "POST",
         body: JSON.stringify(payload),
     });
+
+    if (res.status == 404) {
+        wordNotFoundLabel.classList.add('shown');
+    }
 
     const jsonResponse = await res.json();
 

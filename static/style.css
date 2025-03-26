@@ -1,3 +1,9 @@
+@font-face {
+    font-family: "Fira Sans";
+    src: url("./FiraSans-Regular.ttf") format("truetype");
+  }
+  
+
 :root {
     --background: #eff1f5;
     --text: #4c4f69;
@@ -10,6 +16,7 @@
 body {
     background: var(--background);
     color: var(--text);
+    font-family: "Fira Sans";
 }
 
 article {
@@ -172,4 +179,13 @@ ol.word-history {
     align-items: start;
     overflow: scroll;
     padding-left: 3rem;
+}
+
+#not-found {
+    color: var(--light-peach);
+    display: none;
+}
+
+#not-found.shown {
+    display: initial;
 }
