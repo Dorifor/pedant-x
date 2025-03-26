@@ -126,6 +126,7 @@ func main() {
 	if *debug {
 		fmt.Println("Debug mode: ON 🤖")
 		http.HandleFunc("/debug/state", DebugPrintAppStateHandler)
+		http.HandleFunc("/debug/fetch", DebugFetchRandomPage)
 	}
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))

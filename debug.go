@@ -14,3 +14,8 @@ func DebugPrintAppStateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(res)
 }
+
+func DebugFetchRandomPage(w http.ResponseWriter, r *http.Request) {
+	FetchRandomPage()
+	w.Write([]byte("Fetched page"))
+}
