@@ -15,6 +15,7 @@ type AppState struct {
 	PageId        int
 	PageTokens    []WordToken
 	TokensState   map[int]WordSimilarity
+	PageBaseHTML  string
 	PageFinalHTML string
 	PageTitle     string
 	FoundTitle    bool
@@ -38,11 +39,16 @@ type UserWordRequestPayload struct {
 	Word      string
 }
 
+type UserWordResponse struct {
+	TitleFound    bool
+	SimilarTokens []WordSimilarity
+}
+
 var state AppState
 var model *word2vec.Model
 
 func FetchRandomPage() {
-	random_article_id := GetRandomArticle(50)
+	random_article_id := GetRandomArticle(1000)
 	content := GetArticleContent(random_article_id)
 
 	state.FoundTitle = false
@@ -57,6 +63,9 @@ func GetFinalHtmlFromPage(page PageContent) (tokens []WordToken, final_html stri
 	base_html = strings.Replace(base_html, "<p class=\"mw-empty-elt\">\n</p>\n\n\n", "", 1)
 	base_html = RemoveTagProperties(base_html)
 	base_html = "<h2>" + page.Title + "</h2>" + base_html
+
+	state.PageBaseHTML = base_html
+
 	ignored := GetIgnoredIndexes(base_html)
 
 	title_end_pos := strings.Index(base_html, "</h2>")
@@ -85,6 +94,7 @@ func GetFinalHtmlFromPage(page PageContent) (tokens []WordToken, final_html stri
 
 func main() {
 	binary := flag.String("b", "", "The word embedding binary (word2vec format)")
+	debug := flag.Bool("d", false, "Activates debug mode (see debug.go)")
 
 	flag.Parse()
 
@@ -112,6 +122,12 @@ func main() {
 	// fmt.Printf("Fetched the page \"%s\"\n", state.PageTitle)
 	http.HandleFunc("/", MainHandler)
 	http.HandleFunc("/word", CheckUserWordHandler)
+	http.HandleFunc("/reveal", RevealPageHandler)
+	if *debug {
+		fmt.Println("Debug mode: ON 🤖")
+		http.HandleFunc("/debug/state", DebugPrintAppStateHandler)
+	}
+
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	http.ListenAndServe(":3333", nil)
 	// fmt.Println(r.FindAllString(camus, -1))

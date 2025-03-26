@@ -13,6 +13,9 @@ import (
 
 func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 	var payload UserWordRequestPayload
+	var response UserWordResponse
+	response.SimilarTokens = make([]WordSimilarity, 0)
+	response.TitleFound = false
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 
@@ -23,7 +26,6 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	word := payload.Word
-	var found_similarities []WordSimilarity = make([]WordSimilarity, 0)
 
 	e1 := word2vec.Expr{word: 1}
 	word_int, err := strconv.Atoi(word)
@@ -36,7 +38,7 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 		if SanitizeWord(token.Word) == SanitizeWord(word) {
 			similar_word := WordSimilarity{TokenId: token.Id, Similarity: 1, SimilarWord: token.Word}
 			state.TokensState[token.Id] = similar_word
-			found_similarities = append(found_similarities, similar_word)
+			response.SimilarTokens = append(response.SimilarTokens, similar_word)
 		} else if is_word_number {
 			token_int, err := strconv.Atoi(token.Word)
 			is_token_number := err == nil
@@ -55,9 +57,9 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			similar_int := WordSimilarity{TokenId: token.Id, Similarity: .5, SimilarWord: word}
-			found_similarities = append(found_similarities, similar_int)
+			response.SimilarTokens = append(response.SimilarTokens, similar_int)
 			state.TokensState[token.Id] = similar_int
-		} else if !word_is_unknown {
+		} else if !word_is_unknown || len(word) == 1 {
 			if token.IsTitle {
 				continue
 			}
@@ -66,23 +68,37 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 			similarity, _ := model.Cos(e1, e2)
 
 			last_sim, state_exists := state.TokensState[token.Id]
-			if state_exists && similarity < last_sim.Similarity || similarity < 0.3 {
+			if state_exists && similarity < last_sim.Similarity || similarity < 0.35 {
 				continue
 			}
 
 			similar_word := WordSimilarity{TokenId: token.Id, Similarity: similarity, SimilarWord: word}
-			found_similarities = append(found_similarities, similar_word)
+			response.SimilarTokens = append(response.SimilarTokens, similar_word)
 			state.TokensState[token.Id] = similar_word
 		}
 	}
 
-	if len(found_similarities) <= 0 && word_is_unknown {
+	if len(response.SimilarTokens) <= 0 && word_is_unknown && !is_word_number {
 		http.Error(w, "Word unknown.", 404)
 		return
 	}
 
-	jsonBytes, _ := json.Marshal(found_similarities)
+	if !state.FoundTitle && CheckIfTitleFound() {
+		response.TitleFound = true
+		state.FoundTitle = true
+		fmt.Println("TITLE FOUND !!!!")
+	}
+
+	jsonBytes, _ := json.Marshal(response)
 	w.Write(jsonBytes)
+}
+
+func RevealPageHandler(w http.ResponseWriter, r *http.Request) {
+	if !state.FoundTitle {
+		http.Error(w, "Forbidden.", http.StatusForbidden)
+		return
+	}
+	w.Write([]byte(state.PageBaseHTML))
 }
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {

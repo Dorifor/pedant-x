@@ -29,7 +29,7 @@ span[data-len] {
     border-radius: 2px;
     cursor: pointer;
     transition: background 0.5s ease-in-out;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.4em;
     padding: 0.1em;
 }
 
@@ -78,12 +78,12 @@ span[data-similar]:not(.found)::after {
     justify-content: center;
     align-items: center;
     letter-spacing: initial;
-    transition: color 0.1s, opacity .1s .5s;
+    transition: color 0.1s, opacity .1s;
 }
 
 span[data-similar]:hover::after {
     opacity: 0;
-    transition: opacity .1s;
+    transition: opacity .1s .5s;
 }
 
 span[data-similar].just-similar::after {
@@ -96,11 +96,15 @@ p {
 }
 
 .found-matches {
+    display: inline-block;
+    max-width: 20rem;
     background: var(--green);
     color: transparent;
 }
 
 .similar-matches {
+    display: inline-block;
+    max-width: 20rem;
     background: var(--light-peach);
     color: transparent;
 }
@@ -183,9 +187,12 @@ ol.word-history {
 
 #not-found {
     color: var(--light-peach);
-    display: none;
 }
 
-#not-found.shown {
-    display: initial;
+#title-found {
+    color: var(--green);
+}
+
+.hidden {
+    display: none;
 }

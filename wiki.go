@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"maps"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -64,14 +62,14 @@ func GetArticleContent(id int) PageContent {
 	return q.Query.Pages[str_id]
 }
 
-func GetMostViewedArticle(query *WikiRandomQuery) (page_id, max_view_count int) {
+func GetMostViewedArticle(query *WikiRandomQuery) (page_id, sum_view_count int) {
 	page_ids := make([]string, 0)
 
 	for _, page := range query.Query.Random {
 		page_ids = append(page_ids, fmt.Sprint(page.Id))
 	}
 
-	page_views_url := "https://fr.wikipedia.org/w/api.php?action=query&minsize=40000&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
+	page_views_url := "https://fr.wikipedia.org/w/api.php?action=query&minsize=60000&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
 
 	req, _ := http.NewRequest("GET", page_views_url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -91,27 +89,26 @@ func GetMostViewedArticle(query *WikiRandomQuery) (page_id, max_view_count int) 
 		panic(err)
 	}
 
-	max_page_views := make(map[int]int, 0)
+	sum_page_views := make(map[int]int, 0)
 
 	for _, page := range q.Query.Pages {
-		sorted_views := slices.Sorted(maps.Values(page.Pageviews))
-		max := 0
-		if len(sorted_views) > 0 {
-			max = sorted_views[len(sorted_views)-1]
+		sum := 0
+		for _, views := range page.Pageviews {
+			sum += views
 		}
-		max_page_views[page.Pageid] = max
+		sum_page_views[page.Pageid] = sum
 	}
 
-	for id, max := range max_page_views {
-		if max_view_count > max {
+	for id, sum := range sum_page_views {
+		if sum_view_count > sum {
 			continue
 		}
 
 		page_id = id
-		max_view_count = max
+		sum_view_count = sum
 	}
 
-	fmt.Printf("most viewed: %d with %d views max on a day this month.\n", page_id, max_view_count)
+	fmt.Printf("most viewed: %d with %d views this month.\n", page_id, sum_view_count)
 	return
 }
 

@@ -6,12 +6,25 @@ let similarMatches = document.querySelector(".similar-matches");
 let wordHistoryList = document.querySelector(".word-history");
 let searchInput = searchForm.querySelector("input");
 let wordNotFoundLabel = document.querySelector('#not-found');
+let titleFoundLabel = document.querySelector('#title-found');
+let revealButton = document.querySelector('#reveal-button');
+let wikiArticle = document.querySelector('article');
 
 const wordHistory = [];
 let lastFoundTokens = [];
 
 document.addEventListener("keydown", (e) => {
     searchInput.focus();
+});
+
+revealButton.addEventListener("click", async e => {
+    const res = await fetch("reveal");
+
+    if (res.status == 403) {
+        return;
+    }
+
+    wikiArticle.innerHTML = await res.text();
 });
 
 searchForm.addEventListener("submit", async (e) => {
@@ -23,7 +36,7 @@ searchForm.addEventListener("submit", async (e) => {
     similarMatches.textContent = null;
 
     if (word.length <= 0 || elapsedTime < 250) return;
-    wordNotFoundLabel.classList.remove('shown');
+    wordNotFoundLabel.classList.add('hidden');
 
     searchInput.value = null;
     searchInput.placeholder = word;
@@ -47,12 +60,35 @@ searchForm.addEventListener("submit", async (e) => {
     });
 
     if (res.status == 404) {
-        wordNotFoundLabel.classList.add('shown');
+        wordNotFoundLabel.classList.remove('hidden');
     }
 
+    /**
+     * @type { { TitleFound: boolean, SimilarTokens: { TokenId: number, Similarity: number, SimilarWord: string } }[] }
+     */
     const jsonResponse = await res.json();
 
-    jsonResponse.forEach((sim) => {
+    if (jsonResponse.TitleFound) {
+        titleFoundLabel.classList.remove('hidden');
+        revealButton.classList.remove('hidden');
+    }
+
+    applySimilarTokens(jsonResponse.SimilarTokens);
+
+    if (!wordHistory.includes(word)) {
+        wordHistory.push(word);
+        const historyListItem = document.createElement('li');
+        historyListItem.textContent = word;
+        wordHistoryList.appendChild(historyListItem);
+        historyListItem.scrollIntoView();
+    }
+
+    lastSentWord = word;
+    lastRequestDate = Date.now();
+});
+
+function applySimilarTokens(tokens) {
+    tokens.forEach((sim) => {
         const matchedToken = document.querySelector(`#t${sim.TokenId}`);
         if (sim.Similarity >= .99) {
             matchedToken.classList.add("found");
@@ -73,15 +109,4 @@ searchForm.addEventListener("submit", async (e) => {
 
         lastFoundTokens.push(matchedToken);
     });
-
-    if (!wordHistory.includes(word)) {
-        wordHistory.push(word);
-        const historyListItem = document.createElement('li');
-        historyListItem.textContent = word;
-        wordHistoryList.appendChild(historyListItem);
-        historyListItem.scrollIntoView();
-    }
-
-    lastSentWord = word;
-    lastRequestDate = Date.now();
-});
+}
