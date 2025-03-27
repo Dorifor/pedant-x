@@ -68,7 +68,7 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 			similarity, _ := model.Cos(e1, e2)
 
 			last_sim, state_exists := state.TokensState[token.Id]
-			if state_exists && similarity < last_sim.Similarity || similarity < 0.35 {
+			if state_exists && similarity < last_sim.Similarity || similarity < 0.3 {
 				continue
 			}
 

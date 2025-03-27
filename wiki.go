@@ -69,7 +69,7 @@ func GetMostViewedArticle(query *WikiRandomQuery) (page_id, sum_view_count int) 
 		page_ids = append(page_ids, fmt.Sprint(page.Id))
 	}
 
-	page_views_url := "https://fr.wikipedia.org/w/api.php?action=query&minsize=60000&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
+	page_views_url := "https://fr.wikipedia.org/w/api.php?action=query&minsize=30000&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
 
 	req, _ := http.NewRequest("GET", page_views_url, nil)
 	res, err := http.DefaultClient.Do(req)

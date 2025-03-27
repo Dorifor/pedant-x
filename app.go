@@ -48,7 +48,7 @@ var state AppState
 var model *word2vec.Model
 
 func FetchRandomPage() {
-	random_article_id := GetRandomArticle(1000)
+	random_article_id := GetRandomArticle(3500)
 	content := GetArticleContent(random_article_id)
 
 	state.FoundTitle = false
