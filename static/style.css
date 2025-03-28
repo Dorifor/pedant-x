@@ -196,3 +196,8 @@ ol.word-history {
 .hidden {
     display: none;
 }
+
+header {
+    display: flex;
+    gap: 1rem;
+}

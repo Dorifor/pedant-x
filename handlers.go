@@ -1,31 +1,114 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 	"html/template"
+	"log"
+	"maps"
 	"math"
 	"net/http"
+	"slices"
 	"strconv"
 
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 	"github.com/sajari/word2vec"
 )
 
-func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
-	var payload UserWordRequestPayload
-	var response UserWordResponse
-	response.SimilarTokens = make([]WordSimilarity, 0)
-	response.TitleFound = false
+type WSLobbyResponse struct {
+	Type string
+	Data struct {
+		PlayerCount int
+	}
+}
 
-	err := json.NewDecoder(r.Body).Decode(&payload)
+type WSWordResponse struct {
+	Type   string
+	Status int
+	Data   UserWordResponse
+}
 
+type WSInitResponse struct {
+	Type string
+	Data struct {
+		WordsHistory      []string
+		CurrentTokenState []WordSimilarity
+		TitleFound        bool
+	}
+}
+
+type WSRequest struct {
+	Type string
+	Data any
+}
+
+func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
+	con, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		log.Println(err)
 	}
 
-	word := payload.Word
+	defer con.CloseNow()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	Clients = append(Clients, con)
+
+	var lobby_update WSLobbyResponse
+	lobby_update.Type = "lobby"
+	lobby_update.Data.PlayerCount = len(Clients)
+
+	for _, client := range Clients {
+		wsjson.Write(ctx, client, lobby_update)
+	}
+
+	var word_response WSInitResponse
+	word_response.Type = "init"
+	word_response.Data.TitleFound = state.FoundTitle
+	word_response.Data.WordsHistory = state.WordsHistory
+	word_response.Data.CurrentTokenState = slices.Collect(maps.Values(state.TokensState))
+
+	wsjson.Write(ctx, con, word_response)
+
+	var data WSRequest
+
+	for {
+		err = wsjson.Read(ctx, con, &data)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+
+		switch data.Type {
+		case "word":
+			word := data.Data.(string)
+			wordResponse := HandleWord(word)
+			response := WSWordResponse{
+				Type: "word",
+				Data: wordResponse,
+			}
+
+			if wordResponse.IsUnknown {
+				response.Status = 404
+				wsjson.Write(ctx, con, response)
+			} else {
+				for _, client := range Clients {
+					wsjson.Write(ctx, client, response)
+				}
+				state.WordsHistory = append(state.WordsHistory, word)
+			}
+		}
+	}
+
+	con.Close(websocket.StatusNormalClosure, "connection closed.")
+}
+
+func HandleWord(word string) (response UserWordResponse) {
+	response.SimilarTokens = make([]WordSimilarity, 0)
+	response.TitleFound = false
+	response.IsUnknown = false
+	response.Word = word
 
 	e1 := word2vec.Expr{word: 1}
 	word_int, err := strconv.Atoi(word)
@@ -79,18 +162,15 @@ func CheckUserWordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(response.SimilarTokens) <= 0 && word_is_unknown && !is_word_number {
-		http.Error(w, "Word unknown.", 404)
-		return
+		response.IsUnknown = true
 	}
 
-	if !state.FoundTitle && CheckIfTitleFound() {
+	if !response.IsUnknown && !state.FoundTitle && CheckIfTitleFound() {
 		response.TitleFound = true
 		state.FoundTitle = true
-		fmt.Println("TITLE FOUND !!!!")
 	}
 
-	jsonBytes, _ := json.Marshal(response)
-	w.Write(jsonBytes)
+	return
 }
 
 func RevealPageHandler(w http.ResponseWriter, r *http.Request) {

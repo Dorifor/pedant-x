@@ -1,3 +1,5 @@
+github.com/coder/websocket v1.8.13 h1:f3QZdXy7uGVz+4uCJy2nTZyM0yTBj8yANEHhqlXZ9FE=
+github.com/coder/websocket v1.8.13/go.mod h1:LNVeNrXQZfe5qhS9ALED3uA+l5pPqvwXg3CKoDBB2gs=
 github.com/sajari/word2vec v1.0.1 h1:OSSgRNClx9jn2yM5DQYFkG/+85bMFIKe57geG6qtLA0=
 github.com/sajari/word2vec v1.0.1/go.mod h1:Fi3kT904S98OgHwf8eIZRV9XgZ1gKW0PR5O3TLiKbPA=
 github.com/ziutek/blas v0.0.0-20190227122918-da4ca23e90bb h1:uWiILQloLUVdtPYr1ZZo2zqtlpzo4G8vUpglo/Fs2H8=

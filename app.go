@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/coder/websocket"
 	"github.com/sajari/word2vec"
 )
 
@@ -15,6 +16,7 @@ type AppState struct {
 	PageId        int
 	PageTokens    []WordToken
 	TokensState   map[int]WordSimilarity
+	WordsHistory  []string
 	PageBaseHTML  string
 	PageFinalHTML string
 	PageTitle     string
@@ -42,10 +44,13 @@ type UserWordRequestPayload struct {
 type UserWordResponse struct {
 	TitleFound    bool
 	SimilarTokens []WordSimilarity
+	IsUnknown     bool
+	Word          string
 }
 
 var state AppState
 var model *word2vec.Model
+var Clients []*websocket.Conn
 
 func FetchRandomPage() {
 	random_article_id := GetRandomArticle(3500)
@@ -121,8 +126,9 @@ func main() {
 	FetchRandomPage()
 	// fmt.Printf("Fetched the page \"%s\"\n", state.PageTitle)
 	http.HandleFunc("/", MainHandler)
-	http.HandleFunc("/word", CheckUserWordHandler)
+	// http.HandleFunc("/word", CheckUserWordHandler)
 	http.HandleFunc("/reveal", RevealPageHandler)
+	http.HandleFunc("/ws", WebSocketHandler)
 	if *debug {
 		fmt.Println("Debug mode: ON 🤖")
 		http.HandleFunc("/debug/state", DebugPrintAppStateHandler)
@@ -131,5 +137,4 @@ func main() {
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	http.ListenAndServe(":3333", nil)
-	// fmt.Println(r.FindAllString(camus, -1))
 }

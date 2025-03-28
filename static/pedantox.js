@@ -1,17 +1,66 @@
 let lastSentWord = "";
 let lastRequestDate = Date.now();
-let searchForm = document.querySelector("#word_search");
-let foundMatches = document.querySelector(".found-matches");
-let similarMatches = document.querySelector(".similar-matches");
-let wordHistoryList = document.querySelector(".word-history");
-let searchInput = searchForm.querySelector("input");
-let wordNotFoundLabel = document.querySelector('#not-found');
-let titleFoundLabel = document.querySelector('#title-found');
-let revealButton = document.querySelector('#reveal-button');
-let wikiArticle = document.querySelector('article');
+const searchForm = document.querySelector("#word_search");
+const foundMatches = document.querySelector(".found-matches");
+const similarMatches = document.querySelector(".similar-matches");
+const wordHistoryList = document.querySelector(".word-history");
+const searchInput = searchForm.querySelector("input");
+const wordNotFoundLabel = document.querySelector('#not-found');
+const titleFoundLabel = document.querySelector('#title-found');
+const revealButton = document.querySelector('#reveal-button');
+const wikiArticle = document.querySelector('article');
+const lobbyLabel = document.querySelector('p.lobby-label');
 
 const wordHistory = [];
 let lastFoundTokens = [];
+
+const webSocket = new WebSocket("ws://localhost:3333/ws");
+
+webSocket.onmessage = event => {
+    /**
+     * @type { { Type: string, Status: number, Data: any } }
+     */
+    const message = JSON.parse(event.data);
+
+    switch (message.Type) {
+        case "lobby":
+            lobbyLabel.textContent = `${message.Data.PlayerCount} connectés`;
+            break;
+
+        case "init":
+            if (message.Data.TitleFound) {
+                titleFoundLabel.classList.remove('hidden');
+                revealButton.classList.remove('hidden');
+            }
+
+            applySimilarTokens(message.Data.CurrentTokenState)
+
+            if (message.Data.WordsHistory)
+                message.Data.WordsHistory.forEach(word => addWordToHistory(word))
+            break;
+
+        case "word":
+            if (message.Status == 404) {
+                wordNotFoundLabel.classList.remove('hidden');
+            }
+            if (message.Data.TitleFound) {
+                titleFoundLabel.classList.remove('hidden');
+                revealButton.classList.remove('hidden');
+            }
+
+            foundMatches.textContent = null;
+            similarMatches.textContent = null;
+
+            if (message.Status != 404) {
+                addWordToHistory(message.Data.Word);
+            }
+            applySimilarTokens(message.Data.SimilarTokens);
+            break;
+
+        default:
+            break;
+    }
+}
 
 document.addEventListener("keydown", (e) => {
     searchInput.focus();
@@ -41,40 +90,21 @@ searchForm.addEventListener("submit", async (e) => {
     searchInput.value = null;
     searchInput.placeholder = word;
 
-    lastFoundTokens.forEach((token) => {
-        token.classList.remove("just-found");
-        token.classList.remove("just-similar");
-    });
-    lastFoundTokens = [];
-
     if (word == lastSentWord) return;
 
     const payload = {
+        type: "word",
         session_id: "",
-        word: word,
+        data: word
     };
 
-    const res = await fetch("word", {
-        method: "POST",
-        body: JSON.stringify(payload),
-    });
+    webSocket.send(JSON.stringify(payload))
 
-    if (res.status == 404) {
-        wordNotFoundLabel.classList.remove('hidden');
-    }
+    lastSentWord = word;
+    lastRequestDate = Date.now();
+});
 
-    /**
-     * @type { { TitleFound: boolean, SimilarTokens: { TokenId: number, Similarity: number, SimilarWord: string } }[] }
-     */
-    const jsonResponse = await res.json();
-
-    if (jsonResponse.TitleFound) {
-        titleFoundLabel.classList.remove('hidden');
-        revealButton.classList.remove('hidden');
-    }
-
-    applySimilarTokens(jsonResponse.SimilarTokens);
-
+function addWordToHistory(word) {
     if (!wordHistory.includes(word)) {
         wordHistory.push(word);
         const historyListItem = document.createElement('li');
@@ -82,15 +112,20 @@ searchForm.addEventListener("submit", async (e) => {
         wordHistoryList.appendChild(historyListItem);
         historyListItem.scrollIntoView();
     }
-
-    lastSentWord = word;
-    lastRequestDate = Date.now();
-});
+}
 
 function applySimilarTokens(tokens) {
+    if (!tokens) return;
+
+    lastFoundTokens.forEach((token) => {
+        token.classList.remove("just-found");
+        token.classList.remove("just-similar");
+    });
+    lastFoundTokens = [];
+
     tokens.forEach((sim) => {
         const matchedToken = document.querySelector(`#t${sim.TokenId}`);
-        if (sim.Similarity >= .99) {
+        if (sim.Similarity >= .95) {
             matchedToken.classList.add("found");
             matchedToken.classList.add("just-found");
             matchedToken.textContent = sim.SimilarWord;
