@@ -1,12 +1,8 @@
 package main
 
 import (
-	"context"
 	"regexp"
-	"slices"
 	"strings"
-
-	"github.com/coder/websocket"
 )
 
 func RemoveTagProperties(input string) string {
@@ -44,11 +40,4 @@ func CheckIfTitleFound() bool {
 	}
 
 	return true
-}
-
-func RemoveAllClosedClients() {
-	Clients = slices.DeleteFunc(Clients, func(client *websocket.Conn) bool {
-		_, _, err := client.Reader(context.Background())
-		return err == nil
-	})
 }

@@ -7,8 +7,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync/atomic"
 
-	"github.com/coder/websocket"
+	"github.com/olahol/melody"
 	"github.com/sajari/word2vec"
 )
 
@@ -48,9 +49,13 @@ type UserWordResponse struct {
 	Word          string
 }
 
-var state AppState
-var model *word2vec.Model
-var Clients []*websocket.Conn
+var (
+	state    AppState
+	model    *word2vec.Model
+	sessions map[int64]*melody.Session = make(map[int64]*melody.Session)
+	m        *melody.Melody
+	ids      atomic.Int64
+)
 
 func FetchRandomPage() {
 	random_article_id := GetRandomArticle(3500)
@@ -124,11 +129,27 @@ func main() {
 	fmt.Println("Binary loaded ! ✅")
 
 	FetchRandomPage()
-	// fmt.Printf("Fetched the page \"%s\"\n", state.PageTitle)
+
+	m = melody.New()
+
 	http.HandleFunc("/", MainHandler)
-	// http.HandleFunc("/word", CheckUserWordHandler)
 	http.HandleFunc("/reveal", RevealPageHandler)
-	http.HandleFunc("/ws", WebSocketHandler)
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		m.HandleRequest(w, r)
+	})
+
+	m.HandleConnect(HandleInit)
+
+	m.HandleMessage(HandleMessage)
+
+	m.HandleDisconnect(func(s *melody.Session) {
+		id, _ := s.Get("id")
+		delete(sessions, id.(int64))
+
+		SendLobbyUpdate()
+	})
+
 	if *debug {
 		fmt.Println("Debug mode: ON 🤖")
 		http.HandleFunc("/debug/state", DebugPrintAppStateHandler)

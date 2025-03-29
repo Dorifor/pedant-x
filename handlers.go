@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"html/template"
 	"log"
 	"maps"
@@ -10,8 +10,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/coder/websocket"
-	"github.com/coder/websocket/wsjson"
+	"github.com/olahol/melody"
 	"github.com/sajari/word2vec"
 )
 
@@ -42,66 +41,62 @@ type WSRequest struct {
 	Data any
 }
 
-func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
-	con, err := websocket.Accept(w, r, nil)
+func HandleInit(s *melody.Session) {
+	id := ids.Add(1)
+	s.Set("id", id)
+	sessions[id] = s
+
+	var init_response WSInitResponse
+	init_response.Type = "init"
+	init_response.Data.TitleFound = state.FoundTitle
+	init_response.Data.WordsHistory = state.WordsHistory
+	init_response.Data.CurrentTokenState = slices.Collect(maps.Values(state.TokensState))
+
+	init_response_json, err := json.Marshal(init_response)
 	if err != nil {
 		log.Println(err)
 	}
 
-	defer con.CloseNow()
+	s.Write(init_response_json)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	SendLobbyUpdate()
+}
 
-	Clients = append(Clients, con)
-
-	var lobby_update WSLobbyResponse
-	lobby_update.Type = "lobby"
-	lobby_update.Data.PlayerCount = len(Clients)
-
-	for _, client := range Clients {
-		wsjson.Write(ctx, client, lobby_update)
-	}
-
-	var word_response WSInitResponse
-	word_response.Type = "init"
-	word_response.Data.TitleFound = state.FoundTitle
-	word_response.Data.WordsHistory = state.WordsHistory
-	word_response.Data.CurrentTokenState = slices.Collect(maps.Values(state.TokensState))
-
-	wsjson.Write(ctx, con, word_response)
-
+func HandleMessage(s *melody.Session, msg []byte) {
 	var data WSRequest
 
-	for {
-		err = wsjson.Read(ctx, con, &data)
-		if err != nil {
-			log.Println(err)
-			break
-		}
-
-		switch data.Type {
-		case "word":
-			word := data.Data.(string)
-			wordResponse := HandleWord(word)
-			response := WSWordResponse{
-				Type: "word",
-				Data: wordResponse,
-			}
-
-			if wordResponse.IsUnknown {
-				response.Status = 404
-				wsjson.Write(ctx, con, response)
-			} else {
-				for _, client := range Clients {
-					wsjson.Write(ctx, client, response)
-				}
-				state.WordsHistory = append(state.WordsHistory, word)
-			}
-		}
+	err := json.Unmarshal(msg, &data)
+	if err != nil {
+		log.Println(err)
 	}
 
-	con.Close(websocket.StatusNormalClosure, "connection closed.")
+	switch data.Type {
+	case "word":
+		word := data.Data.(string)
+		wordResponse := HandleWord(word)
+		response := WSWordResponse{
+			Type: "word",
+			Data: wordResponse,
+		}
+
+		if wordResponse.IsUnknown {
+			response.Status = 404
+			response_json, err := json.Marshal(response)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			s.Write(response_json)
+		} else {
+			response_json, err := json.Marshal(response)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			m.Broadcast(response_json)
+			state.WordsHistory = append(state.WordsHistory, word)
+		}
+	}
 }
 
 func HandleWord(word string) (response UserWordResponse) {
@@ -187,4 +182,17 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	t, _ := template.ParseFiles("app.html")
 	t.Execute(w, params)
+}
+
+func SendLobbyUpdate() {
+	var lobby_update WSLobbyResponse
+	lobby_update.Type = "lobby"
+	lobby_update.Data.PlayerCount = len(sessions)
+
+	lobby_update_json, err := json.Marshal(lobby_update)
+	if err != nil {
+		log.Println(err)
+	}
+
+	m.BroadcastMultiple(lobby_update_json, slices.Collect(maps.Values(sessions)))
 }
