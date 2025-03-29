@@ -14,7 +14,7 @@ const lobbyLabel = document.querySelector('p.lobby-label');
 const wordHistory = [];
 let lastFoundTokens = [];
 
-const webSocket = new WebSocket("ws://localhost:3333/ws");
+const webSocket = new WebSocket(`ws://${window.location.host}/ws`);
 
 webSocket.onmessage = event => {
     /**
