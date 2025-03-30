@@ -1,4 +1,4 @@
-# Pédant🞴x
+# Pédant ∙ x
 
 An attempt to remake the game [pédantix / pedantle](https://pedantix.certitudes.org/) from [@enigmathix](https://github.com/enigmathix)
 
