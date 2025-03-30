@@ -175,6 +175,8 @@ aside > hr {
 
 aside > h3 {
     margin: 0;
+    display: flex;
+    gap: 1rem;
 }
 
 ol.word-history {
@@ -200,4 +202,32 @@ ol.word-history {
 header {
     display: flex;
     gap: 1rem;
+    align-items: center;
+}
+
+[type="search"] {
+    background: #e6e9ef;
+    border: 2px solid var(--text);
+    border-radius: 4px;
+    padding: .2rem;
+    position: relative;
+}
+
+header .lobby-label {
+    display: flex;
+    gap: .5rem;
+    background: var(--text);
+    color: var(--background);
+    padding: .4rem .5rem;
+    border-radius: 8px;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+    height: fit-content;
+}
+
+section.top {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }

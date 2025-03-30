@@ -1,0 +1,18 @@
+{
+    "fr": {
+        "wordNotFound": "Mot non reconnu",
+        "winCongratulations": "Félicitations !",
+        "revealPageButton": "Révéler la page",
+        "wordHistory": "Historique",
+        "foundMatchesIndicator": "Mots trouvés",
+        "similarMatchesIndicator": "Mots similaires"
+    },
+    "en": {
+        "wordNotFound": "Unrecognized word",
+        "winCongratulations": "Congratulations !",
+        "revealPageButton": "Reveal page",
+        "wordHistory": "Word history",
+        "foundMatchesIndicator": "Found matches",
+        "similarMatchesIndicator": "Similar matches"
+    }
+}

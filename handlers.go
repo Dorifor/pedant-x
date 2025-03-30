@@ -177,8 +177,12 @@ func RevealPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	params := struct{ ArticleHTML template.HTML }{
+	params := struct {
+		ArticleHTML template.HTML
+		T           AppTranslationStrings
+	}{
 		ArticleHTML: template.HTML(state.PageFinalHTML),
+		T:           translations,
 	}
 	t, _ := template.ParseFiles("app.html")
 	t.Execute(w, params)

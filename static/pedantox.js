@@ -9,7 +9,7 @@ const wordNotFoundLabel = document.querySelector('#not-found');
 const titleFoundLabel = document.querySelector('#title-found');
 const revealButton = document.querySelector('#reveal-button');
 const wikiArticle = document.querySelector('article');
-const lobbyLabel = document.querySelector('p.lobby-label');
+const lobbyLabel = document.querySelector('p.lobby-label > span');
 
 const wordHistory = [];
 let lastFoundTokens = [];
@@ -24,7 +24,7 @@ webSocket.onmessage = event => {
 
     switch (message.Type) {
         case "lobby":
-            lobbyLabel.textContent = `${message.Data.PlayerCount} connectés`;
+            lobbyLabel.textContent = message.Data.PlayerCount;
             break;
 
         case "init":

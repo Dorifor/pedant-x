@@ -40,7 +40,7 @@ type WikiPageViewsQuery struct {
 
 func GetArticleContent(id int) PageContent {
 	str_id := strconv.Itoa(id)
-	content_url := "https://fr.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=&format=json&pageids=" + str_id
+	content_url := "https://" + settings.Lang + ".wikipedia.org/w/api.php?action=query&prop=extracts&exintro=&format=json&pageids=" + str_id
 
 	req, _ := http.NewRequest("GET", content_url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -69,7 +69,7 @@ func GetMostViewedArticle(query *WikiRandomQuery) (page_id, sum_view_count int) 
 		page_ids = append(page_ids, fmt.Sprint(page.Id))
 	}
 
-	page_views_url := "https://fr.wikipedia.org/w/api.php?action=query&minsize=30000&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
+	page_views_url := "https://" + settings.Lang + ".wikipedia.org/w/api.php?action=query&minsize=30000&prop=pageviews&pvipdays=30&format=json&pageids=" + strings.Join(page_ids, "|")
 
 	req, _ := http.NewRequest("GET", page_views_url, nil)
 	res, err := http.DefaultClient.Do(req)
@@ -113,7 +113,7 @@ func GetMostViewedArticle(query *WikiRandomQuery) (page_id, sum_view_count int) 
 }
 
 func GetRandomArticles(count int) WikiRandomQuery {
-	random_url := "https://fr.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=" + strconv.Itoa(count)
+	random_url := "https://" + settings.Lang + ".wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=" + strconv.Itoa(count)
 
 	req, _ := http.NewRequest("GET", random_url, nil)
 	res, err := http.DefaultClient.Do(req)

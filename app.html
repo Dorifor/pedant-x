@@ -11,30 +11,50 @@
 <body>
     <header>
         <h1>Pédant<b>🞴</b>x</h1>
-        <p class="lobby-label">0 connectés</p>
+        <p class="lobby-label"><span>0</span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="lucide lucide-users-round-icon lucide-users-round">
+                <path d="M18 21a8 8 0 0 0-16 0" />
+                <circle cx="10" cy="8" r="5" />
+                <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+            </svg></p>
     </header>
     <hr />
     <main>
 
         <aside>
-            <h3>Historique</h3>
+            <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-logs-icon lucide-logs">
+                    <path d="M13 12h8" />
+                    <path d="M13 18h8" />
+                    <path d="M13 6h8" />
+                    <path d="M3 12h1" />
+                    <path d="M3 18h1" />
+                    <path d="M3 6h1" />
+                    <path d="M8 12h1" />
+                    <path d="M8 18h1" />
+                    <path d="M8 6h1" />
+                </svg> {{ .T.WordHistory }}</h3>
             <hr>
             <ol class="word-history">
 
             </ol>
         </aside>
         <section>
-            <form id="word_search">
-                <input type="search" placeholder="Mot" autofocus />
-                <input type="submit" value="Envoyer" />
-                <span id="not-found" class="hidden">Mot non reconnu</span>
-                <span id="title-found" class="hidden">Félicitations !</span>
-                <button id="reveal-button" class="hidden">Révéler la page</button>
+            <section class="top">
+                <form id="word_search">
+                    <input type="search" placeholder="..." autofocus />
+                    <!-- <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-forward-icon lucide-forward"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg></button> -->
+                </form>
+                <span id="not-found" class="hidden">{{ .T.WordNotFound }}</span>
+                <span id="title-found" class="hidden">{{ .T.WinCongratulations }}</span>
+                <button id="reveal-button" class="hidden">{{ .T.RevealPageButton }}</button>
                 <section class="matches">
-                    <span class="found-matches" title="Mots trouvés"></span><span class="similar-matches"
-                        title="Mots similaires"></span>
+                    <span class="found-matches" title="{{ .T.FoundMatchesIndicator }}"></span><span class="similar-matches"
+                        title="{{ .T.SimilarMatchesIndicator }}"></span>
                 </section>
-            </form>
+            </section>
             <article>{{ .ArticleHTML }}</article>
         </section>
     </main>
