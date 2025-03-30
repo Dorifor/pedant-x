@@ -1,6 +1,6 @@
-# Pédant🞴x
+# Pédant ∙ x
 
-An attempt to remake the game [pédantix / pedantle](https://pedantix.certitudes.org/) from @enigmathix
+An attempt to remake the game [pédantix / pedantle](https://pedantix.certitudes.org/) from [@enigmathix](https://github.com/enigmathix)
 
 # 🤨 Concept
 Random wiki page, blank words, user types word, if word in text, reveal, if not show semantic similarity.
@@ -10,6 +10,8 @@ If title revealed 🏆
 Multiplayer (create group and invite friends / colleagues)
 
 # 📷 Screenshots
+[pedantox.webm](https://github.com/user-attachments/assets/a6c04209-f288-4699-ab0e-08b939ac59dc)
+
 
 # 🤓 Usage
 
@@ -47,5 +49,5 @@ If the lang code provided with the `-l` flag does not have a translation, it wil
 - [wikipedia](https://wikipedia.org) - Random page content
 - [sajari/word2vec](github.com/sajari/word2vec) - Go library for performing computations in word2vec binary models 
 - [melody](https://github.com/olahol/melody/) - 🎶 Minimalist websocket framework for Go
-- [lucide](https://lucide.dev) - Beautiful & consistent icons Made by the community.
+- [lucide](https://lucide.dev) - Beautiful & consistent icons made by the community.
 - [Jean-Philippe Fauconnier](https://fauconnier.github.io/#data) - French word2vec binaries
