@@ -14,6 +14,7 @@ import (
 
 type AppState struct {
 	PageId        int
+	PageViews     int
 	PageTokens    []WordToken
 	TokensState   map[int]WordSimilarity
 	WordsHistory  []string
@@ -74,13 +75,14 @@ var (
 )
 
 func FetchRandomPage() {
-	random_article_id := GetRandomArticle(settings.WikiMinViews)
+	random_article_id, random_article_page_views := GetRandomArticle(settings.WikiMinViews)
 	content := GetArticleContent(random_article_id)
 
 	state.FoundTitle = false
 	state.TokensState = make(map[int]WordSimilarity, 0)
 	state.PageTitle = content.Title
 	state.PageId = random_article_id
+	state.PageViews = random_article_page_views
 	state.WordsHistory = make([]string, 0)
 
 	state.PageTokens, state.PageFinalHTML = GetFinalHtmlFromPage(content)

@@ -135,14 +135,11 @@ func GetRandomArticles(count int) WikiRandomQuery {
 	return q
 }
 
-func GetRandomArticle(minPageViews int) int {
-	var page_view_count int
-	var page_id int
-
+func GetRandomArticle(minPageViews int) (page_id, page_view_count int) {
 	for page_view_count <= minPageViews {
 		random_list := GetRandomArticles(50)
 		page_id, page_view_count = GetMostViewedArticle(&random_list)
 	}
 
-	return page_id
+	return
 }

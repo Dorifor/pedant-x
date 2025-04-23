@@ -146,7 +146,10 @@ func HandleWord(word string) (response UserWordResponse) {
 			similarity, _ := model.Cos(e1, e2)
 
 			last_sim, state_exists := state.TokensState[token.Id]
-			if state_exists && similarity < last_sim.Similarity || similarity < 0.3 {
+			if len(word) > 4 && similarity < 0.3 {
+				continue
+			}
+			if state_exists && similarity < last_sim.Similarity || similarity < 0.2 {
 				continue
 			}
 
@@ -180,9 +183,11 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	params := struct {
 		ArticleHTML template.HTML
 		T           AppTranslationStrings
+		PageViews   int
 	}{
 		ArticleHTML: template.HTML(state.PageFinalHTML),
 		T:           translations,
+		PageViews:   state.PageViews,
 	}
 	t, _ := template.ParseFiles("app.html")
 	t.Execute(w, params)

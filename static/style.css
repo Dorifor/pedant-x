@@ -214,7 +214,7 @@ header {
     position: relative;
 }
 
-header .lobby-label {
+header .lobby-label, header .views-label {
     display: flex;
     gap: .5rem;
     background: var(--text);
@@ -225,6 +225,14 @@ header .lobby-label {
     justify-content: center;
     align-items: center;
     height: fit-content;
+}
+
+header .views-label {
+    background: var(--background);
+    color: var(--text);
+    border: 2px solid var(--text);
+    letter-spacing: .1em;
+    /* font-weight: bold; */
 }
 
 section.top {
