@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -33,9 +32,6 @@ func SanitizeWord(word string) string {
 func CheckIfTitleFound() bool {
 	for i := range len(state.PageTokens) {
 		token := state.PageTokens[i+1]
-		log.Println(token.Id)
-		log.Println(token.Word)
-		log.Println(token.IsTitle)
 		if !token.IsTitle {
 			break
 		}
