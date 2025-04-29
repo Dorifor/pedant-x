@@ -78,17 +78,34 @@ span[data-similar]:not(.found)::after {
     justify-content: center;
     align-items: center;
     letter-spacing: initial;
-    transition: color 0.1s, opacity .1s;
-}
-
-span[data-similar]:hover::after {
-    opacity: 0;
-    transition: opacity .1s .5s;
+    transition: color 0.1s, opacity .1s .5s;
 }
 
 span[data-similar].just-similar::after {
     opacity: 1;
     color: var(--dark-peach);
+}
+
+span[data-similar]:hover::after {
+    opacity: 0;
+    transition: opacity .1s;
+}
+
+span[data-similar].just-hinted::before {
+    opacity: 0;
+}
+
+span[data-similar].just-hinted:hover::before {
+    opacity: 0;
+}
+
+span[data-similar].just-hinted:hover::after {
+    opacity: 1;
+}
+
+span[data-similar].just-hinted::after {
+    opacity: 1;
+    color: var(--green);
 }
 
 p {
@@ -214,7 +231,7 @@ header {
     position: relative;
 }
 
-header .lobby-label, header .views-label {
+header .lobby-label, header .views-label, header .hint-label, .refresh {
     display: flex;
     gap: .5rem;
     background: var(--text);
@@ -227,7 +244,7 @@ header .lobby-label, header .views-label {
     height: fit-content;
 }
 
-header .views-label {
+header .views-label, header .refresh {
     background: var(--background);
     color: var(--text);
     border: 2px solid var(--text);
@@ -235,8 +252,40 @@ header .views-label {
     /* font-weight: bold; */
 }
 
+header .refresh {
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all .2s;
+}
+
+header .refresh.loading svg {
+    animation: rotation 1s linear infinite;
+}
+
+header .refresh svg {
+    transition: all .2s;
+}
+
+header .refresh:hover {
+    color: var(--darker);
+}
+
+header .refresh:not(.loading):hover svg {
+    rotate: 180deg;
+}
+
 section.top {
     display: flex;
     gap: 1rem;
     align-items: center;
+}
+
+@keyframes rotation {
+    0% {
+        rotate: 0deg;
+    }
+
+    100% {
+        rotate: 360deg;
+    }
 }

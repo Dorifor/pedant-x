@@ -13,15 +13,18 @@ import (
 )
 
 type AppState struct {
-	PageId        int
-	PageViews     int
-	PageTokens    []WordToken
-	TokensState   map[int]WordSimilarity
-	WordsHistory  []string
-	PageBaseHTML  string
-	PageFinalHTML string
-	PageTitle     string
-	FoundTitle    bool
+	PageId         int
+	PageViews      int
+	PageTokens     map[int]WordToken
+	TokensState    map[int]WordSimilarity
+	WordsHistory   []string
+	PageBaseHTML   string
+	PageFinalHTML  string
+	PageTitle      string
+	FoundTitle     bool
+	RevealVoteIDs  []int64
+	TokenHints     map[int]int
+	HintsRemaining int
 }
 
 type AppSettings struct {
@@ -84,6 +87,8 @@ func FetchRandomPage() {
 	state.PageId = random_article_id
 	state.PageViews = random_article_page_views
 	state.WordsHistory = make([]string, 0)
+	state.TokenHints = make(map[int]int)
+	state.HintsRemaining = 5
 
 	state.PageTokens, state.PageFinalHTML = GetFinalHtmlFromPage(content)
 }

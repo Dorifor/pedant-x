@@ -10,9 +10,28 @@ const titleFoundLabel = document.querySelector('#title-found');
 const revealButton = document.querySelector('#reveal-button');
 const wikiArticle = document.querySelector('article');
 const lobbyLabel = document.querySelector('p.lobby-label > span');
+const hintsLabel = document.querySelector('p.hint-label > span');
+const refreshButton = document.querySelector('p.refresh');
 
 const wordHistory = [];
 let lastFoundTokens = [];
+const tokens = document.querySelectorAll('article span');
+tokens.forEach(token => {
+    token.addEventListener('click', e => {
+        if (e.target.classList.contains('found'))
+            return;
+
+        var tokenId = e.target.id.replace('t', '');
+
+        const payload = {
+            type: "hint",
+            session_id: "",
+            data: tokenId
+        };
+
+        webSocket.send(JSON.stringify(payload))
+    });
+})
 
 const webSocket = new WebSocket(`ws://${window.location.host}/ws`);
 
@@ -57,10 +76,37 @@ webSocket.onmessage = event => {
             applySimilarTokens(message.Data.SimilarTokens);
             break;
 
+        case "loading":
+            refreshButton.classList.add('loading');
+            break;
+
+        case "refresh":
+            location.reload();
+            break;
+
+        case "hint":
+            hintsLabel.textContent = message.Data.Remaining;
+            applyHint(message.Data.TokenId, message.Data.Hint);
+            break;
+
         default:
             break;
     }
 }
+
+refreshButton.addEventListener('click', e => {
+    if (refreshButton.classList.contains('loading'))
+        return;
+    
+    const payload = {
+        type: "refresh",
+        session_id: "",
+        data: null
+    };
+
+    webSocket.send(JSON.stringify(payload))
+});
+
 
 document.addEventListener("keydown", (e) => {
     searchInput.focus();
@@ -104,6 +150,8 @@ searchForm.addEventListener("submit", async (e) => {
     lastRequestDate = Date.now();
 });
 
+
+
 function addWordToHistory(word) {
     if (!wordHistory.includes(word)) {
         wordHistory.push(word);
@@ -120,6 +168,7 @@ function applySimilarTokens(tokens) {
     lastFoundTokens.forEach((token) => {
         token.classList.remove("just-found");
         token.classList.remove("just-similar");
+        token.classList.remove("just-hinted");
     });
     lastFoundTokens = [];
 
@@ -144,4 +193,24 @@ function applySimilarTokens(tokens) {
 
         lastFoundTokens.push(matchedToken);
     });
+}
+
+function applyHint(tokenId, hintWord) {
+    lastFoundTokens.forEach((token) => {
+        token.classList.remove("just-found");
+        token.classList.remove("just-similar");
+        token.classList.remove("just-hinted");
+    });
+    lastFoundTokens = [];
+
+    const matchedToken = document.querySelector(`#t${tokenId}`);
+    matchedToken.classList.add("just-hinted");
+    if (matchedToken.textContent.length <= hintWord.length) {
+        matchedToken.textContent = " ".repeat(
+            hintWord.length,
+        );
+    }
+    matchedToken.setAttribute("data-similar", hintWord);
+    matchedToken.style.setProperty("--opacity", .7);
+    lastFoundTokens.push(matchedToken);
 }

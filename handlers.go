@@ -36,6 +36,19 @@ type WSInitResponse struct {
 	}
 }
 
+type WSBaseResponse struct {
+	Type string
+}
+
+type WSHintResponse struct {
+	Type string
+	Data struct {
+		TokenId   int
+		Hint      string
+		Remaining int
+	}
+}
+
 type WSRequest struct {
 	Type string
 	Data any
@@ -96,6 +109,32 @@ func HandleMessage(s *melody.Session, msg []byte) {
 			m.Broadcast(response_json)
 			state.WordsHistory = append(state.WordsHistory, word)
 		}
+	case "hint":
+		tokenId, err := strconv.Atoi(data.Data.(string))
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		HandleHint(tokenId)
+	case "refresh":
+		var loadingResponse WSBaseResponse
+		loadingResponse.Type = "loading"
+		loading_response_json, err := json.Marshal(loadingResponse)
+		if err != nil {
+			log.Println(err)
+		}
+		m.Broadcast(loading_response_json)
+
+		FetchRandomPage()
+
+		var refresh_response WSBaseResponse
+		refresh_response.Type = "refresh"
+
+		refresh_response_json, err := json.Marshal(refresh_response)
+		if err != nil {
+			log.Println(err)
+		}
+		m.Broadcast(refresh_response_json)
 	}
 }
 
@@ -171,6 +210,44 @@ func HandleWord(word string) (response UserWordResponse) {
 	return
 }
 
+func HandleHint(tokenId int) {
+	if state.HintsRemaining <= 0 {
+		return
+	}
+
+	hint_count, ok_hint := state.TokenHints[tokenId]
+	token, ok_token := state.PageTokens[tokenId]
+	if !ok_token || hint_count >= 3 {
+		return
+	}
+
+	if !ok_hint {
+		state.TokenHints[tokenId] = 0
+	}
+
+	matches, err := model.CosN(word2vec.Expr{token.Word: 1}, 5)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	hint_count++
+	state.HintsRemaining--
+	var hint_response WSHintResponse
+	hint_response.Type = "hint"
+	hint_response.Data.TokenId = tokenId
+	hint_response.Data.Remaining = state.HintsRemaining
+	hint_response.Data.Hint = matches[3-hint_count].Word
+
+	hint_response_json, err := json.Marshal(hint_response)
+	if err != nil {
+		log.Println(err)
+	}
+
+	state.TokenHints[tokenId]++
+	m.Broadcast(hint_response_json)
+}
+
 func RevealPageHandler(w http.ResponseWriter, r *http.Request) {
 	if !state.FoundTitle {
 		http.Error(w, "Forbidden.", http.StatusForbidden)
@@ -181,13 +258,15 @@ func RevealPageHandler(w http.ResponseWriter, r *http.Request) {
 
 func MainHandler(w http.ResponseWriter, r *http.Request) {
 	params := struct {
-		ArticleHTML template.HTML
-		T           AppTranslationStrings
-		PageViews   int
+		ArticleHTML    template.HTML
+		T              AppTranslationStrings
+		PageViews      int
+		HintsRemaining int
 	}{
-		ArticleHTML: template.HTML(state.PageFinalHTML),
-		T:           translations,
-		PageViews:   state.PageViews,
+		ArticleHTML:    template.HTML(state.PageFinalHTML),
+		T:              translations,
+		PageViews:      state.PageViews,
+		HintsRemaining: state.HintsRemaining,
 	}
 	t, _ := template.ParseFiles("app.html")
 	t.Execute(w, params)

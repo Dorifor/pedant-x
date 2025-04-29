@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -30,7 +31,11 @@ func SanitizeWord(word string) string {
 }
 
 func CheckIfTitleFound() bool {
-	for _, token := range state.PageTokens {
+	for i := range len(state.PageTokens) {
+		token := state.PageTokens[i+1]
+		log.Println(token.Id)
+		log.Println(token.Word)
+		log.Println(token.IsTitle)
 		if !token.IsTitle {
 			break
 		}
@@ -43,7 +48,8 @@ func CheckIfTitleFound() bool {
 	return true
 }
 
-func GetFinalHtmlFromPage(page PageContent) (tokens []WordToken, final_html string) {
+func GetFinalHtmlFromPage(page PageContent) (tokens map[int]WordToken, final_html string) {
+	tokens = make(map[int]WordToken)
 	base_html := page.Extract
 	base_html = strings.Replace(base_html, "<p class=\"mw-empty-elt\">\n</p>\n\n\n", "", 1)
 	base_html = RemoveTagProperties(base_html)
@@ -63,7 +69,7 @@ func GetFinalHtmlFromPage(page PageContent) (tokens []WordToken, final_html stri
 		if !IsIndexIgnored(ignored, match[0]) {
 			token_id++
 			newToken := WordToken{Id: token_id, StartIndex: match[0], Word: base_html[match[0]:match[1]], IsTitle: match[0] < title_end_pos}
-			tokens = append(tokens, newToken)
+			tokens[token_id] = newToken
 
 			var spanHTML = fmt.Sprintf(`<span id="t%d" data-len=%d>%s</span>`, token_id, match[1]-match[0], strings.Repeat(" ", match[1]-match[0]))
 
