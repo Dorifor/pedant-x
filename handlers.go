@@ -225,19 +225,25 @@ func HandleHint(tokenId int) {
 		state.TokenHints[tokenId] = 0
 	}
 
+	var hint_response WSHintResponse
+
 	matches, err := model.CosN(word2vec.Expr{token.Word: 1}, 5)
 	if err != nil {
-		log.Println(err)
-		return
+		// log.Println(err)
+		if state.TokenHints[tokenId]+1 >= len(token.Word) {
+			return
+		}
+		hint_response.Data.Hint = token.Word[:state.TokenHints[tokenId]+1]
+	} else {
+		hint_response.Data.Hint = matches[3-hint_count].Word
 	}
 
 	hint_count++
 	state.HintsRemaining--
-	var hint_response WSHintResponse
+
 	hint_response.Type = "hint"
 	hint_response.Data.TokenId = tokenId
 	hint_response.Data.Remaining = state.HintsRemaining
-	hint_response.Data.Hint = matches[3-hint_count].Word
 
 	hint_response_json, err := json.Marshal(hint_response)
 	if err != nil {
