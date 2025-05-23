@@ -12,6 +12,7 @@ const wikiArticle = document.querySelector('article');
 const lobbyLabel = document.querySelector('p.lobby-label > span');
 const hintsLabel = document.querySelector('p.hint-label > span');
 const refreshButton = document.querySelector('p.refresh');
+const seePageButton = document.querySelector('#see-page-button');
 
 const wordHistory = [];
 let lastFoundTokens = [];
@@ -50,6 +51,8 @@ webSocket.onmessage = event => {
             if (message.Data.TitleFound) {
                 titleFoundLabel.classList.remove('hidden');
                 revealButton.classList.remove('hidden');
+                seePageButton.classList.remove('hidden');
+                seePageButton.setAttribute('href', message.Data.WikiPageURL)
             }
 
             applySimilarTokens(message.Data.CurrentTokenState)
@@ -65,6 +68,8 @@ webSocket.onmessage = event => {
             if (message.Data.TitleFound) {
                 titleFoundLabel.classList.remove('hidden');
                 revealButton.classList.remove('hidden');
+                seePageButton.classList.remove('hidden');
+                seePageButton.setAttribute('href', message.Data.WikiPageURL)
             }
 
             foundMatches.textContent = null;

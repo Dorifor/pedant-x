@@ -10,6 +10,8 @@ import (
 	"slices"
 	"strconv"
 
+	"fmt"
+
 	"github.com/olahol/melody"
 	"github.com/sajari/word2vec"
 )
@@ -33,6 +35,7 @@ type WSInitResponse struct {
 		WordsHistory      []string
 		CurrentTokenState []WordSimilarity
 		TitleFound        bool
+		WikiPageUrl       string
 	}
 }
 
@@ -64,6 +67,9 @@ func HandleInit(s *melody.Session) {
 	init_response.Data.TitleFound = state.FoundTitle
 	init_response.Data.WordsHistory = state.WordsHistory
 	init_response.Data.CurrentTokenState = slices.Collect(maps.Values(state.TokensState))
+	if state.FoundTitle {
+		init_response.Data.WikiPageUrl = "https://" + settings.Lang + ".wikipedia.org/wiki?curid=" + fmt.Sprint(state.PageId)
+	}
 
 	init_response_json, err := json.Marshal(init_response)
 	if err != nil {
@@ -152,7 +158,7 @@ func HandleWord(word string) (response UserWordResponse) {
 	word_is_unknown := err != nil
 
 	for _, token := range state.PageTokens {
-		if SanitizeWord(token.Word) == SanitizeWord(word) {
+		if SanitizeWord(token.Word) == SanitizeWord(word) || CheckPlural(word, token.Word) {
 			similar_word := WordSimilarity{TokenId: token.Id, Similarity: 1, SimilarWord: token.Word}
 			state.TokensState[token.Id] = similar_word
 			response.SimilarTokens = append(response.SimilarTokens, similar_word)
@@ -204,6 +210,7 @@ func HandleWord(word string) (response UserWordResponse) {
 
 	if !response.IsUnknown && !state.FoundTitle && CheckIfTitleFound() {
 		response.TitleFound = true
+		response.WikiPageURL = "https://" + settings.Lang + ".wikipedia.org/wiki?curid=" + fmt.Sprint(state.PageId)
 		state.FoundTitle = true
 	}
 
@@ -233,7 +240,7 @@ func HandleHint(tokenId int) {
 		if state.TokenHints[tokenId]+1 >= len(token.Word) {
 			return
 		}
-		hint_response.Data.Hint = token.Word[:state.TokenHints[tokenId]+1]
+		hint_response.Data.Hint = token.Word[:state.TokenHints[tokenId]+1] + "~"
 	} else {
 		hint_response.Data.Hint = matches[3-hint_count].Word
 	}

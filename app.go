@@ -40,6 +40,7 @@ type AppTranslationStrings struct {
 	WordHistory             string
 	FoundMatchesIndicator   string
 	SimilarMatchesIndicator string
+	SeePageButton           string
 }
 
 type WordToken struct {
@@ -65,6 +66,7 @@ type UserWordResponse struct {
 	SimilarTokens []WordSimilarity
 	IsUnknown     bool
 	Word          string
+	WikiPageURL   string
 }
 
 var (

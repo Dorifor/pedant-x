@@ -29,6 +29,10 @@ func SanitizeWord(word string) string {
 	return strings.ToLower(strings.TrimSpace(word))
 }
 
+func CheckPlural(word string, token string) bool {
+	return SanitizeWord(word+"s") == SanitizeWord(token)
+}
+
 func CheckIfTitleFound() bool {
 	for i := range len(state.PageTokens) {
 		token := state.PageTokens[i+1]

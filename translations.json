@@ -5,7 +5,8 @@
         "revealPageButton": "Révéler la page",
         "wordHistory": "Historique",
         "foundMatchesIndicator": "Mots trouvés",
-        "similarMatchesIndicator": "Mots similaires"
+        "similarMatchesIndicator": "Mots similaires",
+        "seePageButton": "Voir la page"
     },
     "en": {
         "wordNotFound": "Unrecognized word",
@@ -13,6 +14,7 @@
         "revealPageButton": "Reveal page",
         "wordHistory": "Word history",
         "foundMatchesIndicator": "Found matches",
-        "similarMatchesIndicator": "Similar matches"
+        "similarMatchesIndicator": "Similar matches",
+        "seePageButton": "See page"
     }
 }
